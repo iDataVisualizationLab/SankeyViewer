@@ -640,6 +640,9 @@ let Sankey = function(){
         startZoom.y = graphicopt.margin.top;
         g.call(graphicopt.zoom.transform, d3.zoomIdentity);
     };
+    function zoomed(){
+        g.attr("transform", d3.event.transform);
+    }
     master.toggleZoom = function (isZoom){
         if (isZoom){
             d3.select(maindiv)
@@ -663,9 +666,7 @@ let Sankey = function(){
                 .append('rect').attr('x',-graphicopt.margin.left).attr('width',graphicopt.margin.left).attr('height',graphicopt.heightG());
         g = main_svg
             .select("g.content");
-        function zoomed(){
-            g.attr("transform", d3.event.transform);
-        }
+
         if (g.empty()){
             g = d3.select(maindiv)
                 .call(graphicopt.zoom.on("zoom", zoomed))

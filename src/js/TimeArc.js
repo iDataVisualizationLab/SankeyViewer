@@ -301,6 +301,9 @@ debugger
                 .on('.zoom', null);
         }
     };
+    function zoomed(){
+        g.attr("transform", d3.event.transform);
+    }
     master.init=function(){
         // graphicopt.width = d3.select(maindiv).node().getBoundingClientRect().width;
         // graphicopt.height = d3.select(maindiv).node().getBoundingClientRect().height;
@@ -311,9 +314,7 @@ debugger
             .style('overflow','visible');
         g = main_svg
             .select("g.content");
-        function zoomed(){
-            g.attr("transform", d3.event.transform);
-        }
+
         if (g.empty()){
             g = d3.select(maindiv)
                 .call(graphicopt.zoom.on("zoom", zoomed))

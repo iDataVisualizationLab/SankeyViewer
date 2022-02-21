@@ -66,7 +66,7 @@ function initdraw(){
     });
 
     d3.select('#zoomMode').on('click',function(){
-        const isZoom =  (d3.select(this).attr('aria-pressed')==='true');
+        const isZoom =  !(d3.select(this).attr('aria-pressed')==='true');
         subObject.toggleZoom(isZoom);
         timearc.toggleZoom(isZoom);
     })
