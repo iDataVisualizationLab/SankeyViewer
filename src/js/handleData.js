@@ -176,7 +176,7 @@ function createdata(){
      else
          return handleDataComputeByUser_compute(data);
  };
-handleDataComputeByUser.mode = 'core';
+handleDataComputeByUser.mode = 'compute';
 
 function handleDataComputeByUser_core(_data){
     let data = [];

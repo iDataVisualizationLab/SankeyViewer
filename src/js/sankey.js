@@ -48,7 +48,7 @@ let Sankey = function(){
     let nodeSort = undefined;
     let sankey = d3.sankey()
         .nodeWidth(0.1)
-        // .nodeAlign(d3.sankeyLeft)
+        // .nodeAlign(d3.sankeynodeAlign)
         .nodePadding(5);
     master.mouseover = [];
     master.mouseover.dict={};
@@ -127,6 +127,53 @@ let Sankey = function(){
             let links = [];
             const nodeList = {};
             console.time('create nodes');
+            console.log(data);
+            debugger
+            // ---just for test
+            keys.forEach((k,ki)=> {
+                for (const d of data) {
+                    if(d[k] && (d[k].find(e=>e.key==='user16')))
+                    {
+                        const total = d[k].total;
+                        const jobs = d[k].jobs.slice();
+                        d[k] = d[k].filter(d=>(d.key!=='user16'));
+                        d[k].total = total;
+                        d[k].jobs = jobs;
+                    }
+                    if(d[k] && ( (d[k].find(e=>e.key==='user18')&&d[k].find(e=>e.key==='user4'))))
+                    {
+                        const total = d[k].total;
+                        const jobs = d[k].jobs.slice();
+                        d[k] = d[k].filter(d=>(d.key!=='user18')&&(d.key!=='user4'));
+                        d[k].total = total;
+                        d[k].jobs = jobs;
+                    }
+                    if (d[k]&&d[k].length===0){
+                        delete d[k]
+                    }
+                }
+            })
+            // keys.forEach((k,ki)=> {
+            //     for (const d of data) {
+            //         if(!d[k]){
+            //             d[k] = [{key: 'userNone', value: 0}];
+            //             d[k].total = 1;
+            //             d[k].jobs = [];
+            //         }
+            //     }
+            // })
+            // let k = keys[0];
+            // for (const d of data) {
+            //     if (d[k]){
+            //         const total = d[k].total;
+            //         const jobs = d[k].jobs.slice();
+            //         d[k] = d[k].slice(0,1);
+            //         d[k].total = total;
+            //         d[k].jobs = jobs;
+            //     }
+            // }
+            // ---- just for test
+
             keys.forEach((k,ki)=>{
                 for (const d of data) {
                     if(d[k]){
@@ -383,7 +430,8 @@ let Sankey = function(){
                 .extent([[x.range()[0], 10], [x.range()[1], graphicopt.heightG()-10]]);
 
             const __nodes = graph.nodes.map(d => Object.assign({}, d))
-            const __links = graph.links.map(d => Object.assign({}, d))
+            const __links = graph.links.map(d => Object.assign({}, d));
+
             const {nodes, links} = sankey({
                 nodes: __nodes,
                 links: __links
@@ -586,6 +634,22 @@ let Sankey = function(){
     master.freezeHandle = freezeHandle;
     master.freezeHandleTrigger = freezeHandleTrigger;
     master.main_svg = function(){return main_svg};
+    master.resetZoom = function (){
+        let startZoom = d3.zoomIdentity;
+        startZoom.x = graphicopt.margin.left;
+        startZoom.y = graphicopt.margin.top;
+        g.call(graphicopt.zoom.transform, d3.zoomIdentity);
+    };
+    master.toggleZoom = function (isZoom){
+        if (isZoom){
+            d3.select(maindiv)
+                .call(graphicopt.zoom.on("zoom", zoomed))
+        }else{
+            master.resetZoom();
+            d3.select(maindiv)
+                .on('.zoom', null);
+        }
+    };
     master.init=function(){
         // graphicopt.width = d3.select(maindiv).node().getBoundingClientRect().width;
         // graphicopt.height = d3.select(maindiv).node().getBoundingClientRect().height;

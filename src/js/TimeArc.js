@@ -285,6 +285,22 @@ debugger
     master.freezeHandle = freezeHandle;
     master.freezeHandleTrigger = freezeHandleTrigger;
     master.main_svg = function(){return main_svg};
+    master.resetZoom = function (){
+        let startZoom = d3.zoomIdentity;
+        startZoom.x = graphicopt.margin.left;
+        startZoom.y = graphicopt.margin.top;
+        g.call(graphicopt.zoom.transform, d3.zoomIdentity);
+    };
+    master.toggleZoom = function (isZoom){
+        if (isZoom){
+            d3.select(maindiv)
+                .call(graphicopt.zoom.on("zoom", zoomed))
+        }else{
+            master.resetZoom();
+            d3.select(maindiv)
+                .on('.zoom', null);
+        }
+    };
     master.init=function(){
         // graphicopt.width = d3.select(maindiv).node().getBoundingClientRect().width;
         // graphicopt.height = d3.select(maindiv).node().getBoundingClientRect().height;

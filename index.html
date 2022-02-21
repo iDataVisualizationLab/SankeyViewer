@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Job Stream</title>
+    <title>Sankey Viewer</title>
 
 <!--    <script src="src/lib/jquery-3.2.1.min.js"></script>-->
     <link rel="icon" href="src/favicon.png" type="image/gif">
@@ -86,8 +86,11 @@
             <main>
                 <nav class="navbar navbar-light bg-light ">
                     <a class="navbar-brand" href="#">
-                        Job Stream
+                        Sankey Viewer
                     </a>
+                    <div> <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" id="zoomMode">
+                        Zoom
+                    </button></div>
                     <form class="form-inline">
                         <ul class="nav" style="padding-right: 10px">
                             <li class="theme shadow" value="slate" style="background-color: #272B30" onclick="loadTheme(event)"></li>
@@ -117,7 +120,7 @@
                 <div class="row" id="circularLayoutHolder" style="position: relative;height: calc(100vh - 116px);width: 100%; margin: 0px">
             <!--        <div id="circularLayoutHolder" style="height: 100%;width: 100%">-->
 
-                    <h5 class="text-center" style="width:100%" >Sankey by <span id="ganttLayoutLabel">#CPU Cores</span></h5>
+                    <h5 class="text-center" style="width:100%" >Sankey by <span id="ganttLayoutLabel">#Nodes</span></h5>
                     <svg class="row-cols-12 text-center" id="ganttLayout">
                         <defs>
                             <filter id="glow" width="300%" x="-100%" height="300%" y="-100%">

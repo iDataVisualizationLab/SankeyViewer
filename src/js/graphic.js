@@ -60,9 +60,15 @@ function initdraw(){
     d3.select('#flowType').on('change',function(){
         const val = $(this).val();
         handleDataComputeByUser.mode=val;
-        d3.select('#ganttLayoutLabel').text(val==='core'?'#Cores':'#CPU Nodes')
+        d3.select('#ganttLayoutLabel').text(val==='core'?'#CPU Cores':'#Nodes')
         Layout.userTimeline = handleDataComputeByUser(handleDataComputeByUser.data);
         subObject.graphicopt({maxLimit:val=='core'?32:1}).data(Layout.userTimeline).draw();
+    });
+
+    d3.select('#zoomMode').on('click',function(){
+        const isZoom =  (d3.select(this).attr('aria-pressed')==='true');
+        subObject.toggleZoom(isZoom);
+        timearc.toggleZoom(isZoom);
     })
     MetricController.axisSchema(serviceFullList, true).update()
 }
@@ -505,6 +511,10 @@ function initdrawGantt(){
     userPie.mouseoutAdd('gantt',function(d){
         subObject.releasehighlight();
     });
+
+    let isZoom = d3.select('#zoomMode').attr('aria-pressed')==='true';
+    subObject.toggleZoom(isZoom);
+    timearc.toggleZoom(isZoom);
 }
 function drawGantt(){
     if (userPie){
