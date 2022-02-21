@@ -287,9 +287,10 @@ function cluster_map (dataRaw) {
 
         // draw outlier
         let outlierDiv = d3.select('#outlierDisplay');
+        const outlierIns = outlyingBins?Object.keys(outlyingBins.pointObject).length:0;
         if (outlyingBins){
             outlierDiv.style('display','unset');
-            outlierDiv.select('h5.title').html(`Outliers: ${outlyingBins?Object.keys(outlyingBins.pointObject).length:0} temporal instances`);
+            outlierDiv.select('h5.title').html(`Outliers: ${outlierIns} temporal instances`);
             let outlieropt = {...radarChartclusteropt};
             outlieropt.fillin=0;
             outlieropt.events={
@@ -332,6 +333,9 @@ function cluster_map (dataRaw) {
                 };
                 RadarChart(".radarh" + d.id, datadraw, outlieropt, "").select('.axisWrapper .gridCircle').classed('hide', true);
             });
+            
+            let missingDiv = d3.select('#missingDisplay');
+            missingDiv.select('h5.title').html(`Outliers: ${clusterInfo.total-clusterInfo.input-outlierIns} temporal instances`);
         }else{
             outlierDiv.style('display','none');
         }
