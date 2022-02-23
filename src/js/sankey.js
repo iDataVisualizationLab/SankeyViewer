@@ -37,12 +37,69 @@ let Sankey = function(){
 
     let maindiv='#ganttLayout';
     let isFreeze= false;
-    let data=[],times=[],nodes=[],_links=[],graph_={},main_svg,g,r=0;
+    let data=[],times=[],nodes=[],_links=[],graph_={},linksBySource=[],colorBy='name',metrics={},sankeyComputeSelected,main_svg,g,r=0;
+    const area = d3.area().defined(d=>!!d).curve(d3.bumpX).x(d=>d[0])
     let onFinishDraw = [];
     let onLoadingFunc = ()=>{};
     // used to assign nodes color by group
-    var color = d3.scaleOrdinal(d3.schemeCategory20);
-    let getColorScale = function(){return color};
+    let colorByName = d3.scaleOrdinal(["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c", "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"])
+    let color = d3.scaleOrdinal(["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c", "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"])
+    let _color = d3.scaleOrdinal(["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c", "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"])
+    let colorCluster = d3.scaleOrdinal(d3.schemeCategory20);
+    let getColorScale = _getColorScale_byName;
+    function _getColorScale_byName (d){
+        if (d.isShareUser)
+            return '#696969';
+        else
+            return _color (d.name??'');
+    }
+    function getCluster(d){
+        const index = d.layer;
+        let groups = {};
+        Object.keys(d.comp).forEach(k=>{
+            if(metrics) {
+                const com = metrics[k];
+                if (com && com[index]){
+                    const _val = com[index].cluster;
+                    if(_val!==undefined) {
+                        if(!groups[_val])
+                            groups[_val] = 0;
+                        groups[_val]++;
+                    }
+                }
+            }
+        });
+        const val = Object.keys(groups).length;
+        return val>1?undefined:(val===1?Object.keys(groups)[0]:'outlier');
+    }
+    function getValue(d){
+        const index = d.layer;
+        const _key = +(colorBy??'0');
+        let sum = 0;
+        let total = 0;
+        Object.keys(d.comp).forEach(k=>{
+            if(metrics) {
+                const com = metrics[k];
+                if (com && com[index]){
+                    const _val = com[index][_key];
+                    if(_val!==undefined) {
+                        sum += _val*d.comp[k];
+                        total += d.comp[k]
+                    }
+                }
+            }
+        });
+        const val = sum/total;
+        return (total)?val:undefined;
+    }
+    function _getColorScale_byCluster(d){
+        const val = this.getCluster(d);
+        return val?this.props.colorCluster(val):'white'
+    }
+    function _getColorScale_byValue (d){
+        const val = this.getValue(d);
+        return  ''+(color(val))
+    }
     let master={};
     let radius,x,y;
     let nodeSort = undefined;
@@ -91,12 +148,23 @@ let Sankey = function(){
     master.draw = function() {
         if (isFreeze)
             freezeHandle();
-        getColorScale = function(d){
-            if (d.isShareUser)
-                return 'black';
-            else
-                return color(d.name)
+
+        _color = colorByName??d3.scaleOrdinal(["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c", "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"]);
+        color = color??_color;
+        if(color){
+            switch (colorBy) {
+                case 'name':
+                    getColorScale = _getColorScale_byName;
+                    break;
+                case 'cluster':
+                    getColorScale = _getColorScale_byCluster;
+                    break;
+                default:
+                    getColorScale = _getColorScale_byValue;
+            }
         }
+
+
         main_svg.select('#timeClip rect').attr('height',graphicopt.heightG());
         g.select('.timeHandleHolder').classed('hide',true).attr('transform','translate(0,0)')
             .select('.timeStick').attr('y2',graphicopt.heightG())
@@ -436,7 +504,72 @@ let Sankey = function(){
                 nodes: __nodes,
                 links: __links
             });
-            graph_ = {nodes, links};
+            console.timeEnd('Sankey cal')
+            const linksBySource = d3.nest().key((d)=>d.source.name).entries(links);
+            linksBySource.forEach((l)=>{
+                let pre = l.values[0].source;
+                let preL = l.values[0];
+                l.drawP = [horizontalSource3(preL)];
+                l.draw = [pre];
+                l.values.forEach((d)=>{
+                    if (pre!==d.source){
+                        l.draw.push(pre,d.source);
+                        l.drawP.push(horizontalTarget3(preL),undefined,horizontalSource3(d));
+                    }else{
+                        l.draw.push(d.source);
+                        l.drawP.push(horizontalTarget3(preL),horizontalSource3(d));
+                    }
+                    pre = d.target;
+                    preL = d;
+                });
+                l.draw.push(pre);
+                l.drawP.push(horizontalTarget3(preL));
+                l._class = str2class(l.key);
+
+            });
+            linksBySource.forEach(d=>{
+                const start  = d.draw[0].x1;
+                const endT  = _.last(d.draw);
+                const end  = (endT?.x0)??0;
+                const scale = d3.scaleLinear().range([0,100]).domain([start,end]);
+                const fill = (colorBy!=='name')?`url(#${d.values[0]._id})`:getColorScale(d.draw[0]??{});
+                const dot = [];
+                if (sankeyComputeSelected && sankeyComputeSelected.nodes[d.key]){
+                    d.values.forEach(l=>{
+                        if (sankeyComputeSelected.nodes[d.key][l.target.layer]){
+                            sankeyComputeSelected.nodes[d.key][l.target.layer].x =l.target.x0;
+                            sankeyComputeSelected.nodes[d.key][l.target.layer].y =l.y1;
+                            dot.push(sankeyComputeSelected.nodes[d.key][l.target.layer])
+                        }
+                    })
+                    const color =  colorCluster?colorCluster('outlier'):'gray';
+                    d.draw.dot = dot;
+                    d.draw.dot.color = color;
+                }else{
+                    delete d.draw.dot;
+                }
+                d.draw.start = start;
+                d.draw.end = end;
+                d.draw.scale = scale;
+                d.drawP.fill = fill;
+            });
+
+            links.forEach(l=>{
+                if (l.isSameNode){
+                    let parentNode = l.source;
+                    if (l.source.parentNode!==undefined){
+                        parentNode = nodeObj[l.source.parentNode];
+                    }
+                    if (parentNode.drawData.length===0 || parentNode.drawData[parentNode.drawData.length-1][0]!==l.source.time)
+                        parentNode.drawData.push([l.source.time,l.value]);
+                    parentNode.drawData.push([l.target.time,l.value]);
+                }
+
+
+                l._class = str2class(l.source.name)
+            });
+            
+            graph_ = {nodes, links,linksBySource};
             console.log('#links: ',graph_.links.length);
             let isAnimate = true;
             if (links.length>400)
@@ -485,32 +618,33 @@ let Sankey = function(){
                 }
                 l._class = str2class(l.source.name)
             });
+            area.y0((d)=>d[1]+(d[2])).y1((d)=>d[1]-(d[2]));
             let link_p = link_g
                 .attr("fill", "none")
                 .selectAll("g.outer_node")
-                .data(links,(d,i)=>d._id)
+                .data(linksBySource,(d,i)=>d.key)
                 .join(
                     enter => {
-                        e=enter.append("g").attr('class',d=>'outer_node element '+d._class)
+                        let e=enter.append("g").attr('class',d=>'outer_node element '+d._class)
                             .classed('hide',d=>d.hide)
                             .attr("opacity", 0.5).style("mix-blend-mode", "multiply").attr('transform','scale(1,1)');
                         // gradient
                         const gradient = e.append("linearGradient")
-                            .attr("id", d => d._id)
+                            .attr("id", d => d.values[0]._id)
                             .attr("gradientUnits", "userSpaceOnUse")
-                            .attr("x1", d => d.source.x1)
-                            .attr("x2", d => d.target.x0);
-                        gradient.selectAll("stop").data(d=>[[0,getColorScale(d.source)],[100,getColorScale(d.target)]])
+                            .attr("x1", d => d.draw.start)
+                            .attr("x2", d => d.draw.end);
+                        gradient.selectAll("stop").data(d=>d.draw.map(e=>[d.draw.scale(e.x0),getColorScale(e)]))
                             .enter().append('stop')
                             .attr("offset", d=>`${d[0]}%`)
                             .attr("stop-color", d => d[1]);
                         // gradient ---end
-                        const path = e.append("path").attr('class',d=>'a'+d.nameIndex)
-                            .classed('hide',d=>d.arr===undefined)
-                            .attr("fill", d => `url(#${d._id})`)
-                            .attr("stroke", d => `url(#${d._id})`)
+                        const path = e.append("path").attr('class','main')
+                            // .classed('hide',d=>d.arr===undefined)
                             .attr("stroke-width", 0.1)
-                            .attr("d", linkPath);
+                            .attr("fill", d => d.drawP.fill)
+                            .attr("stroke", d => d.drawP.fill)
+                            .attr("d", d=>linkPath(d.drawP)??'');
                         if (isAnimate)
                             path.attr("opacity", 0)
                             .transition().duration(graphicopt.animationTime)
@@ -522,25 +656,26 @@ let Sankey = function(){
                         update.attr('class',d=>'outer_node element '+d._class).classed('hide',d=>d.hide);
                         // gradient
                         const gradient = update.select("linearGradient")
-                            .attr("id", d => d._id)
-                            .attr("gradientUnits", "userSpaceOnUse");
-                        gradient
-                            .attr("x1", d => d.source.x1)
-                            .attr("x2", d => d.target.x0);
+                            .attr("id", d => d.values[0]._id)
+                            .attr("gradientUnits", "userSpaceOnUse")
+                            .attr("x1", d => d.draw.start)
+                            .attr("x2", d => d.draw.end);
 
-                        gradient.selectAll("stop").data(d=>[[0,getColorScale(d.source)],[100,getColorScale(d.target)]])
+                        gradient.selectAll("stop").data(d=>d.draw.map(e=>[d.draw.scale(e.x0),getColorScale(e)]))
+                            .join('stop')
                             .attr("offset", d=>`${d[0]}%`)
                             .attr("stop-color", d => d[1]);
                         // gradient ---end
-                        const path = update.select('path').attr("fill", d => `url(#${d._id})`)
-                            .attr("stroke", d => `url(#${d._id})`)
-                            .attr("stroke-width", 0.1);
+                        const path = update.select('path')
+                            .attr("fill", d => d.drawP.fill)
+                            .attr("stroke", d => d.drawP.fill)
+                            .attr("d", d=>linkPath(d.drawP)??'');
                         if (isAnimate)
                             path
                             .transition().duration(graphicopt.animationTime)
-                            .attr("d", linkPath);
+                                .attr("d", d=>linkPath(d.drawP)??'');
                         else
-                            path.attr("d", linkPath);
+                            path.attr("d", d=>linkPath(d.drawP)??'');
                         return update
                     },exit=>{
                         return exit.call(exit=>(isAnimate?exit.transition().duration(graphicopt.animationTime):exit).attr('opacity',0).remove())
@@ -574,17 +709,29 @@ let Sankey = function(){
         function horizontalTarget(d) {
             return [d.target.x0, d.y1];
         }
-
-        function linkPath(d) {
-            const source = horizontalSource(d);
-            const target = horizontalTarget(d);
-            const thick = d.width/2;
-            const width = (target[0]-source[0])/2;
-            // return d3.line().curve(d3.curveBasis)([source,[source[0]+width,source[1]],[target[0]-width,target[1]],target]);
-            return `M ${source[0]} ${source[1]-thick} C ${source[0]+width} ${source[1]-thick}, ${target[0]-width} ${target[1]-thick}, ${target[0]} ${target[1]-thick} 
-            L ${target[0]} ${target[1]+thick} C ${target[0]-width} ${target[1]+thick}, ${source[0]+width} ${source[1]+thick}, ${source[0]} ${source[1]+thick} Z`;
+        function getUserName2(arr){
+            if (arr && arr.length)
+            {
+                return arr.join(',');
+            }else
+                return 'No user';
         }
 
+        function horizontalSource3(d) {
+            return [d.source.x1, d.y0, d.width/2];
+        }
+
+        function horizontalTarget3(d)  {
+            return [d.target.x0, d.y1, d.width/2];
+        }
+        function linkPath(d) {
+            return area(d);
+        }
+        function renderFargment(source,target,width,thick,lineaScale = 0){
+            thick = thick + lineaScale;
+            return `M ${source[0]} ${source[1]-thick} C ${source[0]+width} ${source[1]-thick}, ${target[0]-width} ${target[1]-thick}, ${target[0]} ${target[1]-thick}
+            L ${target[0]} ${target[1]+thick} C ${target[0]-width} ${target[1]+thick}, ${source[0]+width} ${source[1]+thick}, ${source[0]} ${source[1]+thick} Z`;
+        }
         function getMetric (v){
             return colorBy!=='name'?((colorBy!=='cluster')?`${dimensions[selectedService].text}: ${+d3.format('.2f')(dimensions[selectedService].scale.invert(v))}`:(clusterDescription?(clusterDescription[v]??'mixed'):'')):''
         }
@@ -709,7 +856,10 @@ let Sankey = function(){
         return arguments.length?(times=_data,master):times;
     };
     master.color = function(_data) {
-        return arguments.length?(color=_data,master):color;
+        return arguments.length?(colorByName=_data,master):colorByName;
+    };
+    master.colorCluster = function(_data) {
+        return arguments.length?(colorCluster=_data,master):colorCluster;
     };
     master.getColorScale = function(_data) {
         return arguments.length?(getColorScale=_data?_data:function(){return color},master):getColorScale;
@@ -819,6 +969,9 @@ let Sankey = function(){
         g.selectAll('.element.highlight2')
             .classed('highlight2', false);
     };
+    master.metrics = function(_){
+        metrics = _;
+    }
     function mouseout(d){
         if(!isFreeze)
         {

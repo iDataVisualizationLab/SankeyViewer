@@ -333,7 +333,7 @@ function cluster_map (dataRaw) {
                 };
                 RadarChart(".radarh" + d.id, datadraw, outlieropt, "").select('.axisWrapper .gridCircle').classed('hide', true);
             });
-            
+
             let missingDiv = d3.select('#missingDisplay');
             missingDiv.select('h5.title').html(`Outliers: ${clusterInfo.total-clusterInfo.input-outlierIns} temporal instances`);
         }else{
