@@ -92,7 +92,7 @@ function Sankey() {
   let linkSort;
   let nodes = defaultNodes;
   let links = defaultLinks;
-  let iterations = 6;
+  let iterations = 1;
 
   function sankey() {
     const graph = {nodes: nodes.apply(null, arguments), links: links.apply(null, arguments)};

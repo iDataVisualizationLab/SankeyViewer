@@ -482,7 +482,6 @@ function initdrawGantt(){
     subObject.loadingFunc(updateProcess)
 
     subObject.mouseoverAdd('gantt',function(d){
-        debugger
         const time = d.source.time;
         const _data = {};
         _data[JOB] = {};

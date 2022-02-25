@@ -303,7 +303,18 @@ function cluster_map (dataRaw) {
                             if (d3.select(this.parentNode).select('.axisText').empty())
                                 d3.select(this.parentNode).append('text').attr('class','axisText').attr('transform','rotate(-90) translate(5,-5)');
                             d3.select(this.parentNode).select('.axisText').text(d.text);
-                            $('.tablesvg').scrollTop($('table .axis' + d.idroot + '_' + d.id)[0].offsetTop);
+                            const outlierarr = d3.select(d3.select(d3.event.detail || this).node().parentNode.parentNode).data()
+
+                            subObject.highlightPoint(d3.nest().key(d=>{
+                                const jobs = Layout.computers.nodes_info[d.nodeName].job_id[d.timestep];
+                                const users={};
+                                jobs.forEach(j=>{
+                                    users[Layout.computers.jobs_info[j].user_name] = d.timestep;
+                                })
+                                return subObject.getUserName2(Object.keys(users).map(i=> 'User '+i.replace('user','')  ));
+                                // 'User '+i.replace('user','')
+
+                            }).key(d=>d.timestep).object(outlierarr[0]))
                         }catch(e){}
                     },
                     mouseleave: function(){
@@ -335,7 +346,7 @@ function cluster_map (dataRaw) {
             });
 
             let missingDiv = d3.select('#missingDisplay');
-            missingDiv.select('h5.title').html(`Outliers: ${clusterInfo.total-clusterInfo.input-outlierIns} temporal instances`);
+            missingDiv.select('h5.title').html(`Missing dimension: ${clusterInfo.total-clusterInfo.input-outlierIns} temporal instances`);
         }else{
             outlierDiv.style('display','none');
         }

@@ -102,7 +102,7 @@ function UserPie(){
         var outerArc = d3.arc()
             .innerRadius(radius * 0.9)
             .outerRadius(radius * 0.9);
-        debugger
+
         /* ------- PIE SLICES -------*/
         var slice = g.select(".slices").selectAll("g.slice")
             .data(dataViz, d=>d.data.key)

@@ -37,7 +37,7 @@ let Sankey = function(){
 
     let maindiv='#ganttLayout';
     let isFreeze= false;
-    let data=[],times=[],nodes=[],_links=[],graph_={},linksBySource=[],colorBy='name',metrics={},sankeyComputeSelected,main_svg,g,r=0;
+    let data=[],times=[],nodes=[],_links=[],graph_={},linksBySource=[],colorBy='name',metrics={},sankeyComputeSelected,main_svg,g,link_g,r=0;
     const area = d3.area().defined(d=>!!d).curve(d3.bumpX).x(d=>d[0])
     let onFinishDraw = [];
     let onLoadingFunc = ()=>{};
@@ -436,10 +436,10 @@ let Sankey = function(){
         force = d3.forceSimulation()
             .force("charge", d3.forceManyBody().strength(-50))
             // .force("center", d3.forceCenter(graphicopt.widthG() / 2, graphicopt.heightG() / 2))
-            .force('x', d3.forceX(graphicopt.widthG() / 2).strength(0.015))
+            .force('x', d3.forceX(graphicopt.widthG() / 2).strength(0.05))
             .force('y',  d3.forceY( graphicopt.heightG() / 2).strength(0.015))
             .nodes( forceNode)
-            .force('link',d3.forceLink(_links).id(d=>d.id).distance(0))
+            .force('link',d3.forceLink(_links).id(d=>d.id).distance(0).strength(1))
             .alpha(1)
             .on('tick',function () {
                 onLoadingFunc( {percentage:(1-this.alpha())*100,text:'TimeArc calculation'});
@@ -602,7 +602,7 @@ let Sankey = function(){
             node_p.each(function(d){
                 d.node = d3.select(this);
             });
-            let link_g = svg_paraset.select('.links');
+            link_g = svg_paraset.select('.links');
             if(link_g.empty()){
                 link_g = svg_paraset.append('g').classed('links',true);
             }
@@ -709,13 +709,6 @@ let Sankey = function(){
         function horizontalTarget(d) {
             return [d.target.x0, d.y1];
         }
-        function getUserName2(arr){
-            if (arr && arr.length)
-            {
-                return arr.join(',');
-            }else
-                return 'No user';
-        }
 
         function horizontalSource3(d) {
             return [d.source.x1, d.y0, d.width/2];
@@ -737,6 +730,17 @@ let Sankey = function(){
         }
 
     };
+    master.highlightPoint=(usergrouptimestep)=>{
+        link_g
+            .selectAll("g.outer_node").filter(d=>usergrouptimestep[d.key])
+    }
+    function getUserName2(arr){
+        if (arr && arr.length)
+        {
+            return arr.join(',');
+        }else
+            return 'No user';
+    }
     function str2class(str){
         return 'l'+str.replace(/ |,/g,'_');
     }
@@ -777,6 +781,7 @@ let Sankey = function(){
         const arrn = arr.map(e=>e.replace('10.101.', ''));
         return (arrn.length>limit?[...arrn.slice(0,limit),'+ '+(arrn.length-limit)+'nodes']:arrn).join(', ')
     }
+    master.getUserName2 = getUserName2;
     master.loadingFunc = function(_){onLoadingFunc = _;return master;};
     master.freezeHandle = freezeHandle;
     master.freezeHandleTrigger = freezeHandleTrigger;

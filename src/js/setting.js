@@ -141,7 +141,10 @@ function calculateServiceRange() {
             if (temp_range[1] > max)
                 max = temp_range[1];
         });
-        serviceLists[si].sub.forEach(sub => sub.range = [min, max]);
+        serviceLists[si].sub.forEach(sub => {
+            sub.range = [min, max];
+            sub.scale.domain([min, max]);
+        });
     })
 }
 function initTsnedata() {

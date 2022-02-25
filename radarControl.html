@@ -240,7 +240,10 @@
             calculateServiceRange();
         }else{
             runopt.minMax = false;
-            serviceFullList.forEach((s,si)=>s.range = s._range.slice());
+            serviceFullList.forEach((s,si)=>{
+                s.range = s._range.slice();
+                s.scale.domain(s.range);
+            });
         }
 
         MetricController.axisSchema(serviceFullList).datasummary(undefined).update();
@@ -273,6 +276,8 @@
         let estimateSize = Math.max(1, Math.pow(500, 1 / dataSpider3[0].length));
         console.log('estimateSize:', estimateSize);
         let scagOptions ={
+            isNormalized: true,
+            // isBinned:false,
             startBinGridSize: estimateSize,
             outlyingCoefficient: 1.5,
         };
@@ -288,7 +293,7 @@
             return dd;
         }), scagOptions);
         console.timeEnd('outline:');
-        console.log('Total bin=' + scag.bins.length);
+        // console.log('Total bin=' + scag.bins.length);
         console.log('Outlying bin=' +scag.outlyingBins.length);
 
 

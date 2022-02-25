@@ -252,14 +252,23 @@ function handleRankingData(data){
 
     Layout.usersStatic = getUsers(data);
     Layout.timespan = data.time_stamp;
+    Layout.computers = data;
 
     handleDataComputeByUser.data = data;
     userPie.data(Layout.usersStatic).draw();
     Layout.userTimeline = handleDataComputeByUser(handleDataComputeByUser.data)
 
     MetricController.axisSchema(serviceFullList).update();
-    debugger
-    outlyingBins = outlier(_.flatten(Object.values(tsnedata),1),serviceFullList)
+    // console.time('timestep',Layout.timespan.length);
+    // console.time('outlier');
+    // let bin = [];
+    // let values = Object.values(tsnedata);
+    // Layout.timespan.forEach((t,ti)=>{
+    //     bin.push(outlier(values.map(d=>d[ti]),serviceFullList));
+    // })
+    // outlyingBins = _.flatten(bin,1);
+    // console.timeEnd('outlier')
+    outlyingBins = outlier(_.flatten(Object.values(tsnedata),1),serviceFullList);
     recalculateCluster(group_opt,function(isError){
         cluster_map(cluster_info);
         handle_clusterinfo();
