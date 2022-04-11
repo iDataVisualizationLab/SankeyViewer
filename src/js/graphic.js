@@ -70,7 +70,25 @@ function initdraw(){
         subObject.toggleZoom(isZoom);
         timearc.toggleZoom(isZoom);
     })
-    MetricController.axisSchema(serviceFullList, true).update()
+    MetricController.axisSchema(serviceFullList, true).update();
+
+    d3.select('#missingShow').on('change',function(){
+        if (this.checked) {
+            const outlierarr = Object.values(outlyingBins.missingData);
+            subObject.highlightPoint(d3.nest().key(d => {
+                const jobs = Layout.computers.nodes_info[d.name].job_id[d.timestep];
+                const users = {};
+                jobs.forEach(j => {
+                    users[Layout.computers.jobs_info[j].user_name] = d.timestep;
+                })
+                return subObject.getUserName2(Object.keys(users).map(i => 'User ' + i.replace('user', '')));
+                // 'User '+i.replace('user','')
+
+            }).key(d => d.timestep).object(outlierarr),'missingData')
+        }else{
+            subObject.highlightPoint({},'missingData')
+        }
+    });
 }
 function userTable(d,type){
     highlight2Stack = [];

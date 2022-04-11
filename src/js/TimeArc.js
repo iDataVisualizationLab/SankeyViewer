@@ -152,7 +152,6 @@ let TimeArc = function(){
                 .attr('font-weight',d=>d.isShareUser?null:'bold')
                 .style('fill',d=>d.color||getColorScale(d))
                 .text(d=>d.name);
-debugger
             let layerpath = g.select('g.nodeHolder')
                 .selectAll(".layer")
                 .data(pNodes).join("g")

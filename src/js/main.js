@@ -51,14 +51,15 @@ $(document).ready(function(){
             // let url = '../HiperView/data/814_821_2020.json';
             // let url = 'src/data/922020-932020-145000.json';
             // let url = 'src/data/2182022.json';
-            let url = 'src/data/8112021.json';
+            // let url = 'src/data/8112021_v2.json';
+            let url = 'src/data/test.json';
             if (command.timeStart!==undefined&&command.timeEnd!==undefined){// `2020-02-14T12:00:00-05:00`
                 _start = new Date(command.timeStart);
                 _end = new Date(command.timeEnd);
                 const interval = '5m';
                 const value = 'max';
                 const compress = false;
-                debugger
+
                 if (!(_.isNaN(_start.getDate())||_.isNaN(_end.getDate()))){
                     url= d3.json(getUrl({_start,_end,interval,value,compress}));
                 }
@@ -103,7 +104,6 @@ function initTimeElement(){
                 handleRankingData(data);
                 updateProcess({percentage:80,text:'Preprocess data'})
                 drawUserList();
-                debugger
                 initdrawGantt();
                 drawGantt();
                 // timelineControl.play.bind(timelineControl)();

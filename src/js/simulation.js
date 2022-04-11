@@ -28,6 +28,7 @@ class Simulation {
                          data.jobs_info[jID].user_name = this.userDict[data.jobs_info[jID].user_name];
                }
                     data.jobs_info[jID].node_list_obj = {};
+                    data.jobs_info[jID].node_list = data.jobs_info[jID].node_list??data.jobs_info[jID].nodes
                     data.jobs_info[jID].node_list = data.jobs_info[jID].node_list.map(c=>{
                         let split = c.split('-');
                         data.jobs_info[jID].node_list_obj[split[0]] = +split[1];

@@ -195,8 +195,7 @@ let Sankey = function(){
             let links = [];
             const nodeList = {};
             console.time('create nodes');
-            console.log(data);
-            debugger
+
             // ---just for test
             keys.forEach((k,ki)=> {
                 for (const d of data) {
@@ -730,9 +729,25 @@ let Sankey = function(){
         }
 
     };
-    master.highlightPoint=(usergrouptimestep)=>{
-        link_g
-            .selectAll("g.outer_node").filter(d=>usergrouptimestep[d.key])
+    master.highlightPoint=(usergrouptimestep={},className='outlier')=>{
+        link_g.selectAll("g.outer_node").filter(d=>usergrouptimestep[d.key]).each(function(d){
+            const dot = [];
+            d.values.forEach(l=>{
+                if (usergrouptimestep[d.key][l.target.layer]){
+                    usergrouptimestep[d.key][l.target.layer].x =l.target.x0;
+                    usergrouptimestep[d.key][l.target.layer].y =l.y1;
+                    dot.push(usergrouptimestep[d.key][l.target.layer])
+                }
+            });
+            d3.select(this).selectAll('circle.'+className).data(dot).join('circle')
+                .attr('class',className)
+                .attr('fill','black')
+                .attr('r',d=>Math.sqrt(d.length)+2)
+                .attr('cx',d=>d.x)
+                .attr('cy',d=>d.y)
+                .attr('stroke',"white");
+        })
+        link_g.selectAll("g.outer_node").filter(d=>!usergrouptimestep[d.key]).selectAll('circle.'+className).remove();
     }
     function getUserName2(arr){
         if (arr && arr.length)

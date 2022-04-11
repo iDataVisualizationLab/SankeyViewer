@@ -347,6 +347,46 @@ function cluster_map (dataRaw) {
 
             let missingDiv = d3.select('#missingDisplay');
             missingDiv.select('h5.title').html(`Missing dimension: ${clusterInfo.total-clusterInfo.input-outlierIns} temporal instances`);
+            // venn
+            debugger
+            let missingSets = d3.nest().key(d=>d.indexMissing).entries(Object.values(outlyingBins.missingData));
+            const mapObject = {};
+            missingSets.forEach(d=>{
+                d.sets = d.values[0].indexMissing;
+                d.label = d.sets.length>1?'':serviceFullList[d.sets[0]].text;
+                d.size = d.values.length;
+                if (d.sets.length===1){
+                    mapObject[d.sets[0]] = d;
+                }
+            });
+            const n = missingSets.length;
+            for (let i=0;i<n;i++){
+                const d = missingSets[i];
+                d.sets.forEach(s=>{
+                    if (!mapObject[s]){
+                        mapObject[s] = {sets:[s],label:serviceFullList[s].text,size:0};
+                        missingSets.push(mapObject[s]);
+                    }
+                    mapObject[s].size += d.size;
+                });
+                for (let i=0; i<(d.sets.length-1);i++){
+                    for (let j=i+1; j<d.sets.length;j++){
+                        const key = [d.sets[i],d.sets[j]];
+                        const name= key.join(',');
+                        if (!mapObject[name]){
+                            mapObject[name] = {sets:key,label:'',size:0};
+                            missingSets.push(mapObject[name]);
+                        }
+                        mapObject[name].size += d.size;
+                    }
+                }
+            };
+            let vennchart = venn.VennDiagram()
+                .width(300)
+                .height(300 )
+                .styled(false);
+            let missingDivG = missingDiv.select("#venngroup")
+            missingDivG.datum(missingSets).call(vennchart);
         }else{
             outlierDiv.style('display','none');
         }
