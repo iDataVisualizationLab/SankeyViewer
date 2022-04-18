@@ -183,7 +183,7 @@ let TimeArc = function(){
                         // gradient ---end
                         const path = e.append("path").attr('class',d=>'a'+d._id)
                             .classed('hide',d=>d.arr===undefined)
-                            .attr("fill", d => `url(#${d._id})`)
+                                .attr("fill", d => `url(#${d._id})`)
                             .attr("stroke", d => `url(#${d._id})`)
                             .attr("stroke-width", 0.5)
                             .attr("d", linkPath);
