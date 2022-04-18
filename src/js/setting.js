@@ -24,6 +24,24 @@ var serviceList_selected = serviceLists.map(d=>({"text":d.text,"index":d.id}));
 var alternative_service = serviceListattr;
 var alternative_scale = serviceListattr.map(d=>1);
 
+let metricRangeMinMax = false
+const metricRef ={
+    'temp':d=>[3,98],
+    'fan':d=>[0,d[1]],
+    'power': d=>[0,Math.max(400,d[1])],
+    'percent': ()=>[0,100]
+};
+const getRefRange = (name,range)=>{
+    if (name.match(/temp/i))
+        return {type:'temp',unit:'C',range:metricRef['temp'](range)};
+    if (name.match(/power|consump/i))
+        return {type:'power',unit:'W',range:metricRef['power'](range)};
+    if (name.match(/usage|\%|percen/i))
+        return {type:'percent',unit:'%',range:metricRef['percent'](range)};
+    if (name.match(/fan/i))
+        return {type:'fan',unit:'rpm',range:metricRef['fan'](range)};
+    return {type:null,unit:null,range}
+}
 
 var runopt ={ // run opt global
     minMax: 0,
@@ -174,6 +192,7 @@ function handleSmalldata(dataRaw){
         }
     });
     serviceFullList.forEach(d=>d.scale = d3.scaleLinear().domain(d.range));
+    debugger
     let time_stamp = dataRaw.time_stamp.map(d=>d>9999999999999?(d/1000000):d)
     let sampleh = {};
 

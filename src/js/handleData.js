@@ -208,11 +208,12 @@ function handleDataComputeByUser_compute(_data){
         computers[comp].job_id.forEach((jIDs,i)=>{
             if (jIDs.length){
                 let jobArr = jIDs.map(j=>jobs[j]);
-                let username = d3.nest().key(d=>d.user_name)
-                    .rollup(d=>1).entries(jobArr);
-                username.total = d3.sum(username,e=>e.value);
-                username.jobs = [jIDs,jobArr];
-                item[Layout.timespan[i]] = username.sort((a,b)=>d3.ascending(a.key,b.key));
+
+                    let username = d3.nest().key(d => d.user_name)
+                        .rollup(d => 1).entries(jobArr);
+                    username.total = d3.sum(username, e => e.value);
+                    username.jobs = [jIDs, jobArr];
+                    item[Layout.timespan[i]] = username.sort((a, b) => d3.ascending(a.key, b.key));
             }else
                 item[Layout.timespan[i]] = null;
         });
@@ -236,7 +237,61 @@ function getUsers(_data){
     });
     return users;
 }
+function adjustDimension(_data){
+    if (_data.time_stamp[0] > 999999999999999999)
+        _data.time_stamp = _data.time_stamp.map(d => new Date(d / 1000000));
+    else if (_data.time_stamp[0] < 9999999999){
+        _data.time_stamp = _data.time_stamp.map(d => new Date(d * 1000));
+    }
+    const timerange = d3.extent(_data.time_stamp);
+    const compute = Object.entries(_data.nodes_info);
+    const dimensionKeys = Object.keys(compute[0][1]).filter(s=>compute[0][1][s].find(d=>_.isNumber(d)));
+    const dimensions = dimensionKeys.map((s,i)=>({text:s,
+        index:i,range:[Infinity,-Infinity],scale:d3.scaleLinear(),
+        order:i,
+        angle:(i/dimensionKeys.length)*2*Math.PI,
+        enable:true}));
+    const computers ={};
+
+    let jobonnode = undefined;
+    compute.forEach(d=>{
+        if (!d[1].job_id)
+            d[1].job_id = _data.time_stamp.map(d=>[]);
+        else
+            d[1].job_id = d[1].job_id.map(e=>e.filter(d=>_data.jobs_info[d]));
+        dimensionKeys.forEach((k,ki)=>{
+            d[1][k] = d[1][k]??(_data.time_stamp.map(()=>null));
+            (d[1][k]??[]).forEach((d,ti)=>{
+                if (d!==null) {
+                    if (d < dimensions[ki].range[0])
+                        dimensions[ki].range[0] = d;
+                    if (d > dimensions[ki].range[1])
+                        dimensions[ki].range[1] = d;
+                }
+            })
+        })
+    });
+    // update scale
+    dimensions.forEach(d=>{
+        const recomend = getRefRange(d.text,d.range);
+        d.min = d.range[0];
+        d.max = d.range[1];
+        d.possibleUnit = recomend;
+        // d.range = [recomend];
+        d.range = metricRangeMinMax?[d.min,d.max]:recomend.range.slice();
+        d.scale.domain(d.range)
+    });
+    serviceListattr = dimensions.map(d=>d.text);
+    serviceLists =  dimensions.map((d,i)=>({"text":d.text,"id":i,"enable":true,"sub":[{"text":d.text,"id":0,"enable":true,"idroot":i,"angle":d.angle,"range":d.range}]}));
+    serviceFullList = [];
+    serviceLists.forEach(s=>s.sub.forEach(s=>serviceFullList.push(s)));
+    serviceList_selected = serviceLists.map(d=>({"text":d.text,"index":d.id}));
+    alternative_service = serviceListattr;
+    alternative_scale = serviceListattr.map(d=>1);
+    debugger
+}
 function handleRankingData(data){
+    adjustDimension(data)
     console.time('handleRankingData');
     let r = handleSmalldata(data);
     sampleS = r.sampleh;
