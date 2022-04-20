@@ -430,13 +430,14 @@ let Sankey = function(){
             return Object.assign({}, d);
         });
         // renderSankey();
+        debugger
         // TIME ARC
         const forceNode = nodes.filter(d=>d.shared)
         force = d3.forceSimulation()
             .force("charge", d3.forceManyBody().strength(-50))
             // .force("center", d3.forceCenter(graphicopt.widthG() / 2, graphicopt.heightG() / 2))
             .force('x', d3.forceX(graphicopt.widthG() / 2).strength(0.05))
-            .force('y',  d3.forceY( graphicopt.heightG() / 2).strength(0.015))
+            .force('y',  d3.forceY( graphicopt.heightG() / 2).strength(0.005))
             .nodes( forceNode)
             .force('link',d3.forceLink(_links).id(d=>d.id).distance(0).strength(1))
             .alpha(1)
@@ -498,11 +499,14 @@ let Sankey = function(){
 
             const __nodes = graph.nodes.map(d => Object.assign({}, d))
             const __links = graph.links.map(d => Object.assign({}, d));
-
             const {nodes, links} = sankey({
                 nodes: __nodes,
                 links: __links
             });
+
+            // const nodes = __nodes;
+            // const links = __links.map(d=>({...d,source:nodes[d.source],target:nodes[d.target]}));
+
             console.timeEnd('Sankey cal')
             const linksBySource = d3.nest().key((d)=>d.source.name).entries(links);
             linksBySource.forEach((l)=>{
