@@ -32,7 +32,7 @@ let Sankey = function(){
         padding: 0,
         animationTime:1000,
         color:{},
-        maxLimit: 32
+        maxPerUnit: 32
     };
 
     let maindiv='#ganttLayout';
@@ -42,12 +42,13 @@ let Sankey = function(){
     let onFinishDraw = [];
     let onLoadingFunc = ()=>{};
     // used to assign nodes color by group
-    let colorByName = d3.scaleOrdinal(["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c", "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"])
-    let color = d3.scaleOrdinal(["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c", "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"])
-    let _color = d3.scaleOrdinal(["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c", "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"])
+    let colorByName = d3.scaleOrdinal(["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#bcbd22", "#17becf", "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#c49c94", "#f7b6d2", "#dbdb8d", "#9edae5"])
+    let color = d3.scaleOrdinal(["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#bcbd22", "#17becf", "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#c49c94", "#f7b6d2", "#dbdb8d", "#9edae5"])
+    let _color = d3.scaleOrdinal(["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#bcbd22", "#17becf", "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#c49c94", "#f7b6d2", "#dbdb8d", "#9edae5"])
     let colorCluster = d3.scaleOrdinal(d3.schemeCategory20);
     let getColorScale = _getColorScale_byName;
     function _getColorScale_byName (d){
+        debugger
         if (d.isShareUser)
             return '#696969';
         else
@@ -94,7 +95,7 @@ let Sankey = function(){
     }
     function _getColorScale_byCluster(d){
         const val = this.getCluster(d);
-        return val?this.props.colorCluster(val):'white'
+        return val?colorCluster(val):'white'
     }
     function _getColorScale_byValue (d){
         const val = this.getValue(d);
@@ -149,7 +150,7 @@ let Sankey = function(){
         if (isFreeze)
             freezeHandle();
 
-        _color = colorByName??d3.scaleOrdinal(["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c", "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"]);
+        _color = colorByName??d3.scaleOrdinal(["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#bcbd22", "#17becf", "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#c49c94", "#f7b6d2", "#dbdb8d", "#9edae5"]);
         color = color??_color;
         if(color){
             switch (colorBy) {
@@ -170,7 +171,7 @@ let Sankey = function(){
             .select('.timeStick').attr('y2',graphicopt.heightG())
         y = d3.scalePoint().range([0,graphicopt.heightG()]).padding(graphicopt.padding);
         // x = d3.scaleTime().domain(graphicopt.range||[d3.min(data,d=>d.range[0]),d3.max(data,d=>d.range[1])]).range([0,graphicopt.widthG()]);
-        data.sort(master.sortFunc);
+        // data.sort(master.sortFunc);
         y.domain(data.map(d=>d.key));
         // let sizeScale = d3.scaleSqrt().domain(d3.extent(_.flatten(data.map(d=>d.value.map(d=>d.names.length))))).range([1,graphicopt.hi/2*1.2]);
         // let range= sizeScale.domain();
@@ -186,7 +187,7 @@ let Sankey = function(){
         x = d3.scaleTime().domain([keys[0],_.last(keys)]).range([0,graphicopt.widthG()]);
         let width = x.range()[1]-x.range()[0];
 
-        let graph = (()=> {
+        let graph = (() => {
             let index = -1;
             let nodes = [];
             const nodeByKey = new Map;
@@ -195,80 +196,47 @@ let Sankey = function(){
             let links = [];
             const nodeList = {};
             console.time('create nodes');
-
-            // ---just for test
-            keys.forEach((k,ki)=> {
+            keys.forEach((_k, ki) => {
+                const k = '' + _k;
                 for (const d of data) {
-                    if(d[k] && (d[k].find(e=>e.key==='user16')))
-                    {
-                        const total = d[k].total;
-                        const jobs = d[k].jobs.slice();
-                        d[k] = d[k].filter(d=>(d.key!=='user16'));
-                        d[k].total = total;
-                        d[k].jobs = jobs;
-                    }
-                    if(d[k] && ( (d[k].find(e=>e.key==='user18')&&d[k].find(e=>e.key==='user4'))))
-                    {
-                        const total = d[k].total;
-                        const jobs = d[k].jobs.slice();
-                        d[k] = d[k].filter(d=>(d.key!=='user18')&&(d.key!=='user4'));
-                        d[k].total = total;
-                        d[k].jobs = jobs;
-                    }
-                    if (d[k]&&d[k].length===0){
-                        delete d[k]
-                    }
-                }
-            })
-            // keys.forEach((k,ki)=> {
-            //     for (const d of data) {
-            //         if(!d[k]){
-            //             d[k] = [{key: 'userNone', value: 0}];
-            //             d[k].total = 1;
-            //             d[k].jobs = [];
-            //         }
-            //     }
-            // })
-            // let k = keys[0];
-            // for (const d of data) {
-            //     if (d[k]){
-            //         const total = d[k].total;
-            //         const jobs = d[k].jobs.slice();
-            //         d[k] = d[k].slice(0,1);
-            //         d[k].total = total;
-            //         d[k].jobs = jobs;
-            //     }
-            // }
-            // ---- just for test
-
-            keys.forEach((k,ki)=>{
-                for (const d of data) {
-                    if(d[k]){
-                        const text = getUserName(d[k]);
+                    if (d[k]) {
+                        const item = d[k];
+                        const text = getUserName(item);
                         const key = JSON.stringify([k, text]);
-                        if ((graphicopt.showShareUser && (!(d[k]&&d[k].length>1)))|| nodeByKey.has(key))
+                        if ((graphicopt.showShareUser && (!(item && item.length > 1))) || nodeByKey.has(key))
                             continue; // return
 
-                        const node = {name: text,time:k,layer:ki,_key:key,relatedLinks:[],element:d[k],id:++index};
+                        const node = {
+                            name: text,
+                            time: _k,
+                            layer: ki,
+                            _key: key,
+                            relatedLinks: [],
+                            element: item,
+                            id: ++index
+                        };
                         if (!nodeLabel.has(text)) {
                             node.first = true;
                             node.childNodes = [];
                             nodeLabel.set(text, node);
                             nodeList[text] = [];
-                            node.isShareUser = (d[k]&&d[k].length>1);
-                            node.maxIndex=ki;
+                            node.isShareUser = !!(item && (item.length > 1));
+                            node.maxIndex = ki;
                             node.maxval = 0;
-                            node.drawData=[];
-                            getColorScale(node);
+                            node.drawData = [];
+                            node.comp = {}
+                            node.comp[d.key] = true;
+
 
                             nodes.push(node);
                             nodeByKey.set(key, node);
                             indexByKey.set(key, index);
                             nodeList[text].push(node);
-                        }else {
-                            node.isShareUser = (d[k]&&d[k].length>1);
+                        } else {
+                            node.isShareUser = !!(item && item.length > 1);
                             node.parentNode = nodeLabel.get(text).id;
-                            getColorScale(node);
+                            node.comp = {}
+                            node.comp[d.key] = true;
                             nodes.push(node);
                             // if (nodeByKey.has(key)) continue;
                             nodeByKey.set(key, node);
@@ -280,45 +248,51 @@ let Sankey = function(){
             });
             console.timeEnd('create nodes');
             console.time('create links');
-            // nodes = _.shuffle(nodes);
-
-            const maxLimit = graphicopt.maxLimit;
+            const maxLimit = graphicopt.maxPerUnit;
             const mapOfSankey = {};
+            debugger
+            // nodes = _.shuffle(nodes)
             for (let i = 1; i < keys.length; ++i) {
-                const a = keys[i - 1];
-                const b = keys[i];
+                const a = '' + keys[i - 1];
+                const b = '' + keys[i];
                 const linkByKey = new Map();
-                for (const d of data){
-                    const aName = getUserName(d[a]);
-                    const bName = getUserName(d[b]);
-                    const sourceName = JSON.stringify([a, getUserName(d[a])]);
-                    const targetName = JSON.stringify([b, getUserName(d[b])]);
-                    if (d[a] && d[b] && nodeByKey.has(sourceName) && nodeByKey.has(targetName)){
-                        const names = [sourceName,targetName];
+                for (const d of data) {
+                    const d_a = d[a];
+                    const d_b = d[b];
+                    const sourceName = JSON.stringify([a, getUserName(d_a)]);
+                    const targetName = JSON.stringify([b, getUserName(d_b)]);
+                    if (d[a] && d[b] && nodeByKey.has(sourceName) && nodeByKey.has(targetName)) {
+                        const names = [sourceName, targetName];
                         const key = JSON.stringify(names);
-                        // const value = d.value || 1;
-                        const value = Math.min(d[a].total,maxLimit);
+                        // const value = (d.value??d_a.total) || 1;
+                        // const value = Math.min(d_a.total,maxLimit);
+                        const value = Math.min(d_a.total, maxLimit);
                         const arr = [d.key];//just ad for testing
                         let link = linkByKey.get(key);
                         const byComp = {};
+                        const byComp_t = {};
                         byComp[d.key] = value;
+                        byComp_t[d.key] = Math.min(d_b.total, maxLimit);
+                        // _byComp_t[d.key] = d_b.total;
+
                         if (link) {
-                            let new_val = Math.min((link.byComp[d.key]??0) + value,maxLimit);
-                            let delta = new_val - (link.byComp[d.key]??0);
+                            let new_val = Math.min((link.byComp[d.key] ?? 0) + value, maxLimit);
+                            let delta = new_val - (link.byComp[d.key] ?? 0);
                             link.byComp[d.key] = new_val;
 
+                            let new_val_t = Math.min((link.byComp_t[d.key] ?? 0) + byComp_t[d.key], maxLimit);
+                            link.byComp_t[d.key] = new_val_t;
+                            // link._byComp_t[d.key] = (link._byComp_t[d.key]??0)+_byComp_t[d.key];
+
+                            nodeByKey.get(sourceName).comp[d.key] = true;
+                            nodeByKey.get(targetName).comp[d.key] = true;
+                            d_a.jobs[0].forEach((d, i) => link.sources[d] = {display: {}, data: d_a.jobs[1][i]});
+                            d_b.jobs[0].forEach((d, i) => link.targets[d] = {display: {}, data: d_b.jobs[1][i]});
                             // if a compute over the limit
                             link.value += delta;
-
-                            // d[a].forEach((n,i)=>{
-                            //     link._source[i].value+=n.value;
-                            //     link._source.total+=n.value;
-                            // });
-                            d[b].forEach((n,i)=>{
-                                if(link._target[i]===undefined)
-                                    debugger
-                                link._target[i].value+=n.value;
-                                link._target.total+=n.value;
+                            d_b.forEach((n, i) => {
+                                link._target[i].value += n.value;
+                                link._target.total = (link._target.total ?? 0) + n.value;
                             });
                             link.arr.push(arr[0]);
                             // TIME ARC
@@ -332,32 +306,48 @@ let Sankey = function(){
                             // }
                             continue;
                         }
-                        if(!mapOfSankey[sourceName])
-                            mapOfSankey[sourceName]= JSON.parse(JSON.stringify(d[a]));
+                        const source = JSON.stringify([a, getUserName(d_a)]);
+                        nodeByKey.get(source).comp[d.key] = true;
+                        const target = JSON.stringify([b, getUserName(d_b)]);
+                        nodeByKey.get(target).comp[d.key] = true;
+                        if (!mapOfSankey[sourceName])
+                            mapOfSankey[sourceName] = JSON.parse(JSON.stringify(d[a]));
                         mapOfSankey[targetName] = JSON.parse(JSON.stringify(d[b]));
                         const _source = mapOfSankey[sourceName];
                         // _source.total=d[a].total;
                         const _target = mapOfSankey[targetName];
                         // _target.total=d[b].total;
-
+                        // const _source = JSON.parse(JSON.stringify(d[a]));
+                        // _source.total=Math.min(d_a.total,maxLimit);
+                        // const _target = JSON.parse(JSON.stringify(d[b]));
+                        // _target.total=Math.min(d_a.total,maxLimit);
+                        const sources = {};
+                        const targets = {};
+                        d_a.jobs[0].forEach((d, i) => sources[d] = {display: {}, data: d_a.jobs[1][i]});
+                        d_b.jobs[0].forEach((d, i) => targets[d] = {display: {}, data: d_b.jobs[1][i]});
                         link = {
                             byComp,
-                            source: indexByKey.get(JSON.stringify([a, getUserName(d[a])])),
+                            byComp_t,
+                            // _byComp_t,
+                            source: indexByKey.get(source),
+                            sources,
+                            targets,
                             _source,
-                            target: indexByKey.get(JSON.stringify([b, getUserName(d[b])])),
+                            target: indexByKey.get(target),
                             _target,
                             names,
                             arr,
                             value,
-                            _id: 'link_'+key.replace(/\.|\[|\]| |"|\\|:|-|,/g,'')
+                            _id: 'link_' + key.replace(/\.|\[|\]| |"|\\|:|-|,/g, '')
                         };
-                        if (getUserName(d[a])!==getUserName(d[b])){
-                            if (graphicopt.hideStable){
-                            nodeByKey.get(JSON.stringify([a, getUserName(d[a])])).relatedLinks.push(link);
-                            nodeByKey.get(JSON.stringify([b, getUserName(d[b])])).relatedLinks.push(link);}
-                            nodeByKey.get(JSON.stringify([a, getUserName(d[a])])).shared = true;
-                            nodeByKey.get(JSON.stringify([b, getUserName(d[b])])).shared = true;
-                        }else{
+                        if (getUserName(d_a) !== getUserName(d_b)) {
+                            if (graphicopt.hideStable) {
+                                nodeByKey.get(JSON.stringify([a, getUserName(d_a)])).relatedLinks.push(link);
+                                nodeByKey.get(JSON.stringify([b, getUserName(d_b)])).relatedLinks.push(link);
+                            }
+                            nodeByKey.get(JSON.stringify([a, getUserName(d_a)])).shared = true;
+                            nodeByKey.get(JSON.stringify([b, getUserName(d_b)])).shared = true;
+                        } else {
                             link.isSameNode = true;
                         }
                         links.push(link);
@@ -365,50 +355,54 @@ let Sankey = function(){
                     }
                 }
             }
-            if (graphicopt.showOverLimitUser){
+
+            if (graphicopt.showOverLimitUser) {
                 let keepNodes = {};
-                const listUser = {};
                 let nodeObj = {};
-                nodes.forEach(d=>{nodeObj[d.id] = d;});
-                links = links.filter(l=>{
-                    if (((l._source.total>l.arr.length*graphicopt.maxLimit) || (l._target.total>l.arr.length*graphicopt.maxLimit))){
-                        keepNodes[nodeObj[l.source].name]=true;
-                        keepNodes[nodeObj[l.target].name]=true;
+                nodes.forEach(d => {
+                    nodeObj[d.id] = d;
+                });
+                links = links.filter(l => {
+                    if (((l._source.total > l.arr.length * 36) || (l._target.total > l.arr.length * 36))) {
+                        keepNodes[nodeObj[l.source].name] = true;
+                        keepNodes[nodeObj[l.target].name] = true;
                         return true;
                     }
                     l.hide = true;
                     return false;
                 });
-                nodes = nodes.filter((n,index)=>{
+                nodes = nodes.filter((n, index) => {
                     if (keepNodes[n.name])
                         return true;
-                    else{
+                    else {
                         delete nodeObj[n.id];
                         // listUser[n.name] = n;
                         return false;
                     }
                 });
-                links = links.filter(l=>nodeObj[l.source]&& nodeObj[l.target] && nodeObj[nodeObj[l.source].parentNode] && nodeObj[nodeObj[l.target].parentNode] )
+                links = links.filter(l => nodeObj[l.source] && nodeObj[l.target] && nodeObj[nodeObj[l.source].parentNode] && nodeObj[nodeObj[l.target].parentNode])
             }
-            if (graphicopt.hideStable){
+            if (graphicopt.hideStable) {
                 let removeNodes = {};
-                const listUser = {};
-                d3.entries(nodeList).forEach(n=>{
+                Object.entries(nodeList).forEach(n => {
                     let removeList = {};
-                    if (!n.value.find(e=>{if (!e.relatedLinks.length) removeList[e.id] = true; return e.relatedLinks.length}))
-                        d3.keys(removeList).forEach(k=>removeNodes[k] =true);
+                    if (!n.value.find(e => {
+                        if (!e.relatedLinks.length) removeList[e.id] = true;
+                        return e.relatedLinks.length
+                    }))
+                        Object.keys(removeList).forEach(k => removeNodes[k] = true);
                 })
 
-                nodes = nodes.filter((n,index)=>{
+                nodes = nodes.filter((n, index) => {
                     if (!removeNodes[n.id])
                         return true;
-                    else{
+                    else {
                         // listUser[n.name] = n;
                         return false;
                     }
                 });
                 // console.log(listUser)
-                links = links.filter(l=>!(removeNodes[l.source]||removeNodes[l.target]))
+                links = links.filter(l => !(removeNodes[l.source] || removeNodes[l.target]))
             }
             console.timeEnd('create links');
             return {nodes, links};
@@ -443,16 +437,16 @@ let Sankey = function(){
             .alpha(1)
             .on('tick',function () {
                 onLoadingFunc( {percentage:(1-this.alpha())*100,text:'TimeArc calculation'});
-                nodes.forEach(function (d,i) {
+                forceNode.forEach( (d,i) =>{
                     if(d.x!==undefined && d.y!==undefined) {
-                        // d.x += (graphicopt.widthG() / 2 - d.x) * 0.05;
-                        if (d.parentNode >= 0) {
-                            if (nodeObj[d.parentNode].y !== undefined)
-                                d.y += (nodeObj[d.parentNode].y - d.y) * 0.5;
+                        // d.x += ((self.widthG() / 2) - d.x) * 0.05;
+                        if (d.parentNode !== undefined) {
+                            if ((nodeObj[d.parentNode]!== undefined) && (nodeObj[d.parentNode].y !== undefined))
+                                d.y += ((nodeObj[d.parentNode].y??0) - d.y) * 0.5;
 
-                                if (nodeObj[d.parentNode].childNodes && nodeObj[d.parentNode].childNodes.length) {
-                                    nodeObj[d.parentNode].y = d3.mean(nodeObj[d.parentNode].childNodes,e=>nodeObj[e].y);
-                                }
+                            if (nodeObj[d.parentNode].childNodes && nodeObj[d.parentNode].childNodes.length) {
+                                nodeObj[d.parentNode].y = d3.mean(nodeObj[d.parentNode].childNodes,e=>nodeObj[e].y);
+                            }
                         } else if (d.childNodes && d.childNodes.length) {
                             var yy = d3.mean(d.childNodes, e => nodeObj[e].y);
                             if (yy !== undefined)
@@ -463,17 +457,23 @@ let Sankey = function(){
             })
             .on("end", function () {
                 onLoadingFunc();
-                const miny= d3.min(forceNode,d=>d.parentNode!==undefined?nodeObj[d.parentNode].y:d.y);
+                console.time('forceEnd');
                 let left = 1;
                 const nodep = {};
                 forceNode.forEach(d=>{
                     if ((d.parentNode !==undefined) && nodeObj[d.parentNode].childNodes && nodeObj[d.parentNode].childNodes.length) {
-                        nodeObj[d.parentNode].y = d3.mean(nodeObj[d.parentNode].childNodes,e=>nodeObj[e].y);
+                        nodep[d.name] = d3.mean(nodeObj[d.parentNode].childNodes,e=>nodeObj[e].y);
+                    }else if(d.y){
+                        nodep[d.name] = d.y;
                     }
-                })
+                });
+                Object.keys(nodep).sort((a,b)=>(nodep[a])- (nodep[b]))
+                    .forEach((k,ki)=>nodep[k]= ki*10);
+                // console.log(forceNode.slice().sort((a,b)=>a.y-b.y).map(d=>d.name))
+                const miny =0;
                 graph.nodes.forEach(d=>{
-                    d._forcey =  (d.parentNode!==undefined?nodeObj[d.parentNode].y:d.y);
-                    if((d._forcey === undefined || _.isNaN(d._forcey)) ) {
+                    d._forcey =  nodep[d.name];
+                    if((d._forcey === undefined) || _.isNaN(d._forcey) ) {
                         if (nodep[d.name] === undefined) {
                             nodep[d.name] = miny - 10 * (left);
                             d._forcey = nodep[d.name];

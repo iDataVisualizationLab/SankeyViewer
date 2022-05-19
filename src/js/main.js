@@ -54,6 +54,7 @@ $(document).ready(function(){
             // let url = 'src/data/8112021_v2.json';
             // let url = 'src/data/test.json';
             let url = 'src/data/nocona_24h.json';
+            // let url = 'src/data/nocona-jieoyao.json';
             if (command.timeStart!==undefined&&command.timeEnd!==undefined){// `2020-02-14T12:00:00-05:00`
                 _start = new Date(command.timeStart);
                 _end = new Date(command.timeEnd);

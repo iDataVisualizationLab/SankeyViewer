@@ -205,6 +205,7 @@ function handleDataComputeByUser_compute(_data){
     const jobs = _data[JOB];
     for (let comp in computers){
         let item = {key:comp,data:computers[comp]};
+        debugger
         computers[comp].job_id.forEach((jIDs,i)=>{
             if (jIDs.length){
                 let jobArr = jIDs.map(j=>jobs[j]);
@@ -252,7 +253,7 @@ function adjustDimension(_data){
         angle:(i/dimensionKeys.length)*2*Math.PI,
         enable:true}));
     const computers ={};
-
+    debugger
     let jobonnode = undefined;
     compute.forEach(d=>{
         if (!d[1].job_id)

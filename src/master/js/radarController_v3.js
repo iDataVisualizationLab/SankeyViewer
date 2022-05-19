@@ -629,7 +629,7 @@ let radarController = function () {
         }
     }
     radarController.update = function () {
-        let axis = g.selectAll('.axis')
+        let axis = g.select('.axisWrapper').selectAll('.axis')
             .data(radarcomp.axisList,d=>d.data.text);
         axis.exit().remove();
         let naxis = axis.enter().append('g')

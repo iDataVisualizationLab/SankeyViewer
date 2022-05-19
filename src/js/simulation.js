@@ -37,9 +37,12 @@ class Simulation {
                     data.jobs_info[jID].node_list_obj = {};
                     data.jobs_info[jID].node_list = data.jobs_info[jID].node_list ?? data.jobs_info[jID].nodes
                     data.jobs_info[jID].node_list = data.jobs_info[jID].node_list.map(c => {
-                        let split = c.split('-');
-                        data.jobs_info[jID].node_list_obj[split[0]] = +split[1];
-                        return split[0];
+                        // let split = c.split('-');
+                        // data.jobs_info[jID].node_list_obj[split[0]] = +split[1];
+                        // return split[0];
+
+                        data.jobs_info[jID].node_list_obj[c] = 1;
+                        return c;
                     });
 
                     data.jobs_info[jID].finish_time = data.jobs_info[jID].finish_time??data.jobs_info[jID].end_time;
@@ -55,6 +58,7 @@ class Simulation {
                             data.jobs_info[jID].finish_time = data.jobs_info[jID].finish_time * 1000
                     }
                 });
+                handleCUJ({computers:data.nodes_info,jobs:data.jobs_info},data.time_stamp)
                 console.timeEnd('load data')
                 this.data = data;
                 this.onTimeChange.forEach(function (listener) {
@@ -241,4 +245,55 @@ class Simulation {
     destroy() {
         console.log('timeline destroyed!');
     }
+}
+
+function handleCUJ({computers,jobs},timestamp){
+    const compute_user= {};
+    const jobm = {};
+    debugger
+    Object.keys(computers).forEach((k)=>{
+        jobm[k] = timestamp.map(()=>({}));
+        const d = computers[k];
+        d.user=[];
+        d.jobName=timestamp.map(()=>[]);
+        d.job_id=timestamp.map(()=>[]);
+        d.users=timestamp.map(()=>[]);
+        d.cpus=timestamp.map(()=>({}));
+        compute_user[k] = timestamp.map(()=>({}));
+    });
+
+    const jobData = Object.entries(jobs);
+    jobData.forEach(jj=>{
+        const j = {key:jj[0],value:jj[1]}
+        j.value.start_Index = timestamp.findIndex((t)=>t>j.value.start_time);
+        if (j.value.start_Index>0)
+            j.value.start_Index --;
+        else if(j.value.start_Index ===-1)
+            j.value.start_Index = timestamp.length-1;
+        j.value.finish_Index = j.value.finish_time?timestamp.findIndex((t)=>t>j.value.finish_time):-1;
+        if (j.value.finish_Index>0)
+            j.value.finish_Index --;
+        else if(j.value.finish_Index ===-1)
+            j.value.finish_Index = timestamp.length-1;
+        j.value.node_list.forEach(comp=>{
+            if(computers[comp]){
+                for (let t=j.value.start_Index;t<=j.value.finish_Index;t++){
+                    if(!jobm[comp][t][j.key]) {
+                        computers[comp].job_id[t].push(j.key);
+                        jobm[comp][t][j.key] = false;
+                    }
+                    computers[comp].cpus[t][j.key] = (j.value.node_list_obj[comp]);
+                    if(!compute_user[comp][t][j.value.user_name]){
+                        compute_user[comp][t][j.value.user_name]=true;
+                        computers[comp].users[t].push(j.value.user_name);
+                    }
+                }
+            }
+        })
+    });
+    const users = getUsers(jobs,computers,timestamp.length);
+    Object.keys(users).forEach((k,i)=>{
+        users[k].node.forEach((c)=> computers[c]?computers[c].user.push(k):'');
+    });
+    return {users}
 }

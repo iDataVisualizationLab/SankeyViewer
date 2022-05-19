@@ -363,6 +363,16 @@ function getsummaryservice(){
 //     'src/data/nocona-8-11-21/Query by User-data-2022-02-19 19_07_37.csv',
 // ].map(f=>d3.csv(f))).then(convertQuanahData)
 
+// Promise.all(['src/data/nocona-jieoyao/Power Map-data-2022-04-20 16_40_35.csv',
+//     'src/data/nocona-jieoyao/Power Map-data-2022-04-20 16_40_39.csv',
+//     'src/data/nocona-jieoyao/Power Map-data-2022-04-20 16_40_45.csv',
+//     'src/data/nocona-jieoyao/Power Map-data-2022-04-20 16_40_58.csv',
+//     'src/data/nocona-jieoyao/Power Map-data-2022-04-20 16_41_03.csv',
+//     'src/data/nocona-jieoyao/Power Map-data-2022-04-20 16_41_09.csv',
+//     'src/data/nocona-jieoyao/Power Map-data-2022-04-20 16_41_14.csv',
+//     'src/data/nocona-jieoyao/Power Map-data-2022-04-20 16_41_21.csv',
+// ].map(f=>d3.csv(f))).then(convertQuanahData)
+
 function convertQuanahData(files){
     debugger
     const jobs_info = {};
